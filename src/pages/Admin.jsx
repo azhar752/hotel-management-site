@@ -27,7 +27,6 @@ const Admin = () => {
   // Login Handle
   const handleLogin = (e) => {
     e.preventDefault();
-    // Aap yahan apna pasandida username/password set kar sakte hain
     if (user === "azhar" && pass === "azhar@123") {
       setIsLoggedIn(true);
     } else {
@@ -37,12 +36,25 @@ const Admin = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Firebase ke liye data prepare karna
+    const dataToSave = {
+      ...formData,
+      // Gallery agar string hai toh array banao, warna wese hi rehne do
+      gallery:
+        typeof formData.gallery === "string"
+          ? formData.gallery.split(",").map((s) => s.trim())
+          : formData.gallery,
+    };
+
     if (editId) {
-      updateHotel(editId, formData);
+      updateHotel(editId, dataToSave);
       setEditId(null);
     } else {
-      addHotel(formData);
+      addHotel(dataToSave);
     }
+
+    // Form clear karna
     setFormData({
       name: "",
       img: "",
@@ -59,6 +71,7 @@ const Admin = () => {
 
   const handleEdit = (hotel) => {
     setEditId(hotel.id);
+    // Edit karte waqt gallery array ko wapas string banana taake input mein dikhe
     const galleryString = Array.isArray(hotel.gallery)
       ? hotel.gallery.join(", ")
       : hotel.gallery;
@@ -66,7 +79,6 @@ const Admin = () => {
     window.scrollTo(0, 0);
   };
 
-  // --- 1. LOGIN SCREEN ---
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 font-sans p-6">
@@ -105,7 +117,6 @@ const Admin = () => {
     );
   }
 
-  // --- 2. ACTUAL DASHBOARD (Only shows if logged in) ---
   return (
     <div className="p-10 bg-gray-50 min-h-screen font-sans">
       <div className="max-w-6xl mx-auto">
@@ -113,7 +124,6 @@ const Admin = () => {
           <h1 className="text-3xl font-black text-[#005a42] uppercase tracking-tighter">
             {editId ? "📝 Edit Listing" : "➕ Admin Dashboard"}
           </h1>
-          {/* Logout Button */}
           <button
             onClick={() => setIsLoggedIn(false)}
             className="bg-red-50 text-red-600 px-6 py-2 rounded-xl font-black text-[10px] uppercase hover:bg-red-600 hover:text-white transition-all shadow-sm"
@@ -122,7 +132,6 @@ const Admin = () => {
           </button>
         </div>
 
-        {/* --- FORM SECTION --- */}
         <form
           onSubmit={handleSubmit}
           className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 mb-12"
@@ -182,7 +191,6 @@ const Admin = () => {
                 setFormData({ ...formData, reserve: e.target.value })
               }
             />
-
             <textarea
               placeholder="Description"
               className="p-3 border rounded-xl md:col-span-3 h-24"
