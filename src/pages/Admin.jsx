@@ -17,7 +17,7 @@ const Admin = () => {
     startBid: "",
     purchasePrice: "",
     reserve: "",
-    fmv: "",
+    fmv: "", // FMV field
     description: "",
     includes: "",
     notes: "",
@@ -37,21 +37,26 @@ const Admin = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Firebase ke liye data prepare karna
+    // Data prepare kar rahe hain Firebase ke liye
     const dataToSave = {
       ...formData,
-      // Gallery agar string hai toh array banao, warna wese hi rehne do
+      // Gallery string ko array mein convert karna (agar user ne comma use kiya ho)
       gallery:
         typeof formData.gallery === "string"
-          ? formData.gallery.split(",").map((s) => s.trim())
+          ? formData.gallery
+              .split(",")
+              .map((s) => s.trim())
+              .filter((s) => s !== "")
           : formData.gallery,
     };
 
     if (editId) {
       updateHotel(editId, dataToSave);
       setEditId(null);
+      alert("Hotel updated successfully!");
     } else {
       addHotel(dataToSave);
+      alert("Hotel added successfully!");
     }
 
     // Form clear karna
@@ -71,14 +76,16 @@ const Admin = () => {
 
   const handleEdit = (hotel) => {
     setEditId(hotel.id);
-    // Edit karte waqt gallery array ko wapas string banana taake input mein dikhe
+    // Gallery array ko wapas string banana input mein dikhane ke liye
     const galleryString = Array.isArray(hotel.gallery)
       ? hotel.gallery.join(", ")
       : hotel.gallery;
+
     setFormData({ ...hotel, gallery: galleryString });
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // --- 1. LOGIN SCREEN ---
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 font-sans p-6">
@@ -117,6 +124,7 @@ const Admin = () => {
     );
   }
 
+  // --- 2. ACTUAL DASHBOARD ---
   return (
     <div className="p-10 bg-gray-50 min-h-screen font-sans">
       <div className="max-w-6xl mx-auto">
@@ -132,6 +140,7 @@ const Admin = () => {
           </button>
         </div>
 
+        {/* --- FORM SECTION --- */}
         <form
           onSubmit={handleSubmit}
           className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 mb-12"
@@ -139,8 +148,9 @@ const Admin = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <input
               type="text"
+              required
               placeholder="Hotel Name"
-              className="p-3 border rounded-xl"
+              className="p-3 border rounded-xl outline-none focus:ring-1 ring-[#005a42]"
               value={formData.name}
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
@@ -148,8 +158,9 @@ const Admin = () => {
             />
             <input
               type="text"
+              required
               placeholder="Main Image URL"
-              className="p-3 border rounded-xl"
+              className="p-3 border rounded-xl outline-none focus:ring-1 ring-[#005a42]"
               value={formData.img}
               onChange={(e) =>
                 setFormData({ ...formData, img: e.target.value })
@@ -157,59 +168,69 @@ const Admin = () => {
             />
             <input
               type="text"
-              placeholder="Gallery (Comma separated)"
-              className="p-3 border rounded-xl"
+              placeholder="Gallery (Comma separated URLs)"
+              className="p-3 border rounded-xl outline-none focus:ring-1 ring-[#005a42]"
               value={formData.gallery}
               onChange={(e) =>
                 setFormData({ ...formData, gallery: e.target.value })
               }
             />
             <input
-              type="text"
-              placeholder="Start Bid"
-              className="p-3 border rounded-xl"
+              type="number"
+              placeholder="Start Bid ($)"
+              className="p-3 border rounded-xl outline-none focus:ring-1 ring-[#005a42]"
               value={formData.startBid}
               onChange={(e) =>
                 setFormData({ ...formData, startBid: e.target.value })
               }
             />
             <input
-              type="text"
-              placeholder="Purchase Price"
-              className="p-3 border rounded-xl"
+              type="number"
+              placeholder="Purchase Price ($)"
+              className="p-3 border rounded-xl outline-none focus:ring-1 ring-[#005a42]"
               value={formData.purchasePrice}
               onChange={(e) =>
                 setFormData({ ...formData, purchasePrice: e.target.value })
               }
             />
             <input
-              type="text"
-              placeholder="Reserve"
-              className="p-3 border rounded-xl"
+              type="number"
+              placeholder="Reserve Price ($)"
+              className="p-3 border rounded-xl outline-none focus:ring-1 ring-[#005a42]"
               value={formData.reserve}
               onChange={(e) =>
                 setFormData({ ...formData, reserve: e.target.value })
               }
             />
+            <input
+              type="number"
+              placeholder="Fair Market Value (FMV $)"
+              className="p-3 border rounded-xl outline-none focus:ring-1 ring-[#005a42]"
+              value={formData.fmv}
+              onChange={(e) =>
+                setFormData({ ...formData, fmv: e.target.value })
+              }
+            />
+
             <textarea
               placeholder="Description"
-              className="p-3 border rounded-xl md:col-span-3 h-24"
+              className="p-3 border rounded-xl md:col-span-3 h-24 outline-none focus:ring-1 ring-[#005a42]"
               value={formData.description}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
             />
             <textarea
-              placeholder="Includes"
-              className="p-3 border rounded-xl md:col-span-2 h-20"
+              placeholder="Includes (Items included)"
+              className="p-3 border rounded-xl md:col-span-2 h-20 outline-none focus:ring-1 ring-[#005a42]"
               value={formData.includes}
               onChange={(e) =>
                 setFormData({ ...formData, includes: e.target.value })
               }
             />
             <textarea
-              placeholder="Notes"
-              className="p-3 border rounded-xl h-20"
+              placeholder="Notes (Important info)"
+              className="p-3 border rounded-xl h-20 outline-none focus:ring-1 ring-[#005a42]"
               value={formData.notes}
               onChange={(e) =>
                 setFormData({ ...formData, notes: e.target.value })
@@ -224,7 +245,7 @@ const Admin = () => {
           </button>
         </form>
 
-        {/* --- LIVE TOP 3 BIDS SECTION --- */}
+        {/* --- LIVE BIDS SECTION --- */}
         <div className="mb-12">
           <h2 className="text-xl font-black text-gray-800 mb-6 uppercase tracking-widest">
             🏆 Top 3 Bidders Per Hotel
@@ -281,41 +302,54 @@ const Admin = () => {
           </div>
         </div>
 
-        {/* --- MANAGE LISTINGS --- */}
+        {/* --- MANAGE LISTINGS TABLE --- */}
         <div className="bg-white rounded-[2.5rem] shadow-sm overflow-hidden border border-gray-100">
           <div className="p-6 bg-gray-50 border-b font-black text-[10px] text-gray-400 uppercase tracking-widest">
-            All Hotels
+            Current Listings
           </div>
-          {hotels.map((h) => (
-            <div
-              key={h.id}
-              className="flex justify-between items-center p-6 border-b hover:bg-gray-50"
-            >
-              <div className="flex items-center gap-4">
-                <img
-                  src={h.img}
-                  className="w-12 h-12 rounded-xl object-cover"
-                />
-                <span className="font-bold text-gray-700 text-sm">
-                  {h.name}
-                </span>
+          {hotels.length > 0 ? (
+            hotels.map((h) => (
+              <div
+                key={h.id}
+                className="flex justify-between items-center p-6 border-b hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center gap-4">
+                  <img
+                    src={h.img}
+                    className="w-12 h-12 rounded-xl object-cover"
+                    alt=""
+                  />
+                  <div>
+                    <p className="font-bold text-gray-700 text-sm">{h.name}</p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase">
+                      ID: {h.id}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => handleEdit(h)}
+                    className="text-blue-600 font-black text-[10px] uppercase bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (window.confirm("Delete this hotel?"))
+                        deleteHotel(h.id);
+                    }}
+                    className="text-red-500 font-black text-[10px] uppercase bg-red-50 px-4 py-2 rounded-lg hover:bg-red-600 hover:text-white transition-all"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-4">
-                <button
-                  onClick={() => handleEdit(h)}
-                  className="text-blue-600 font-black text-[10px] uppercase bg-blue-50 px-4 py-2 rounded-lg"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => deleteHotel(h.id)}
-                  className="text-red-500 font-black text-[10px] uppercase bg-red-50 px-4 py-2 rounded-lg"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="p-10 text-center text-gray-400 font-bold uppercase text-xs">
+              No hotels found. Add one above.
+            </p>
+          )}
         </div>
       </div>
     </div>
