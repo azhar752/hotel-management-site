@@ -1,64 +1,51 @@
 import React, { createContext, useState, useEffect } from "react";
+import { db } from "../firebase";
+import { ref, onValue, push, remove } from "firebase/database";
+
 export const HotelContext = createContext();
 
 export const HotelProvider = ({ children }) => {
-  const [hotels, setHotels] = useState(() => {
-    const saved = localStorage.getItem("hotels");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [hotels, setHotels] = useState([]);
 
+  // Firebase se data load karna
   useEffect(() => {
-    localStorage.setItem("hotels", JSON.stringify(hotels));
-  }, [hotels]);
+    const hotelsRef = ref(db, "hotels");
+    onValue(hotelsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const list = Object.keys(data).map((key) => ({
+          ...data[key],
+          id: key,
+        }));
+        setHotels(list);
+      } else {
+        setHotels([]);
+      }
+    });
+  }, []);
 
-  // 1. Naya Hotel Add karne ke liye
+  // Naya Hotel Firebase mein add karna
   const addHotel = (newHotel) => {
-    const hotelWithId = {
+    const hotelsRef = ref(db, "hotels");
+    const processedHotel = {
       ...newHotel,
-      id: Date.now().toString(),
-      // Gallery ko comma se alag karke array banana
-      gallery: newHotel.gallery
-        ? newHotel.gallery.split(",").map((s) => s.trim())
-        : [newHotel.img],
+      gallery:
+        typeof newHotel.gallery === "string"
+          ? newHotel.gallery.split(",").map((s) => s.trim())
+          : newHotel.gallery || [newHotel.img],
       bidders: [],
     };
-    setHotels([...hotels, hotelWithId]);
+    push(hotelsRef, processedHotel);
   };
 
-  // 2. Hotel Delete karne ke liye
-  const deleteHotel = (id) => setHotels(hotels.filter((h) => h.id !== id));
-
-  // 3. Hotel UPDATE karne ke liye (Ye wala missing tha)
-  const updateHotel = (id, updatedData) => {
-    setHotels(
-      hotels.map((h) =>
-        h.id === id
-          ? {
-              ...h,
-              ...updatedData,
-              // Gallery ko handle karna ke wo string hai ya array
-              gallery:
-                typeof updatedData.gallery === "string"
-                  ? updatedData.gallery.split(",").map((s) => s.trim())
-                  : updatedData.gallery,
-            }
-          : h,
-      ),
-    );
-  };
-
-  // 4. Bidding update karne ke liye
-  const updateHotelBids = (id, newBidders) => {
-    setHotels(
-      hotels.map((h) => (h.id === id ? { ...h, bidders: newBidders } : h)),
-    );
+  // --- YE WALA FUNCTION MISSING THA, ISE ADD KAR DIYA HAI ---
+  const deleteHotel = (id) => {
+    const hotelDoc = ref(db, `hotels/${id}`);
+    remove(hotelDoc);
   };
 
   return (
-    <HotelContext.Provider
-      // updateHotel ko yahan value mein add karna zaroori hai
-      value={{ hotels, addHotel, deleteHotel, updateHotel, updateHotelBids }}
-    >
+    <HotelContext.Provider value={{ hotels, addHotel, deleteHotel }}>
       {children}
     </HotelContext.Provider>
   );
